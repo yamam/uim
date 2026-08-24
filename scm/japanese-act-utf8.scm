@@ -28,8 +28,8 @@
 ;;; SUCH DAMAGE.
 ;;;;
 
-;; Japanese EUC
-(define ja-act-rule-basic
+;; UTF-8
+(define ja-act-rule-basic-utf8
   '( 
 
 ((("a"). ())("あ" "ア" "ｱ"))
@@ -696,7 +696,7 @@
 ))
 
 
-(define ja-act-rule (append ja-act-rule-basic (filter (lambda (x) (not (ichar-alphabetic? (string->charcode (caaar x))))) ja-rk-rule-basic)))
+(define ja-act-rule-utf8 (append ja-act-rule-basic-utf8 (filter (lambda (x) (not (ichar-alphabetic? (string->charcode (caaar x))))) ja-rk-rule-basic-utf8)))
 
 (define ja-act-skk-okuri-char-alist '(("c" . "k") ("'" . "t") (";" . "a") ("q" . "o") ("j" . "e") ("k" . "u") ("x" . "i")))
 (define ja-act-skk-downcase-alist (alist->icharlist '(("\"" . "'") (":" . ";"))))

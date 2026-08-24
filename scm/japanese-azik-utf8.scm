@@ -28,7 +28,7 @@
 ;;; SUCH DAMAGE.
 ;;;;
 
-(define ja-azik-rule-basic
+(define ja-azik-rule-basic-utf8
   '(
 
     (((":"). ())("ー" "ー" "ｰ"))
@@ -527,7 +527,7 @@
     ((("z" "z"). ())(("ざ" "ザ" "ｻﾞ") ("ん" "ン" "ﾝ")))
 ))
 
-(define ja-azik-rule (append ja-azik-rule-basic ja-rk-rule-basic))
+(define ja-azik-rule-utf8 (append ja-azik-rule-basic-utf8 ja-rk-rule-basic-utf8))
 
 (define ja-azik-skk-okuri-char-alist '((";" . "t")))
 (define ja-azik-skk-downcase-alist (alist->icharlist '(("+" . ";"))))

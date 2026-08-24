@@ -30,7 +30,7 @@
 
 ;; SKK is a Japanese input method
 ;;
-;; EUC-JP
+;; UTF-8
 ;;
 ;; SKKの入力は下記の状態で構成される
 ;; Following is list of SKK input state
@@ -44,7 +44,7 @@
 ;;  漢字コード入力 kcode
 ;;
 ;;
-(require "japanese.scm")
+(require "japanese-utf8.scm")
 (require-custom "generic-key-custom.scm")
 (require-custom "skk-custom.scm")
 (require-custom "skk-key-custom.scm")
@@ -59,7 +59,7 @@
 (define skk-ddskk-like-heading-label-char-list '("a" "s" "d" "f" "j" "k" "l"))
 (define skk-uim-heading-label-char-list '("1" "2" "3" "4" "5" "6" "7" "8" "9" "0"))
 
-(define skk-ja-rk-rule (append ja-rk-rule-basic ja-rk-rule-additional))
+(define skk-ja-rk-rule (append ja-rk-rule-basic-utf8 ja-rk-rule-additional-utf8))
 (define skk-okuri-char-alist '())
 (define skk-downcase-alist '())
 (define skk-set-henkan-point-key '())
@@ -376,23 +376,23 @@
                   (set! skk-set-henkan-point-key '())
 		  skk-ja-rk-rule)
 		 ((= input-rule skk-input-rule-azik)
-		  (require "japanese-azik.scm")
+		  (require "japanese-azik-utf8.scm")
                   (set! skk-okuri-char-alist ja-azik-skk-okuri-char-alist)
                   (set! skk-downcase-alist ja-azik-skk-downcase-alist) 
                   (set! skk-set-henkan-point-key ja-azik-skk-set-henkan-point-key)
-		  ja-azik-rule)
+		  ja-azik-rule-utf8)
 		 ((= input-rule skk-input-rule-act)
-		  (require "japanese-act.scm")
+		  (require "japanese-act-utf8.scm")
                   (set! skk-okuri-char-alist ja-act-skk-okuri-char-alist)
                   (set! skk-downcase-alist ja-act-skk-downcase-alist)
                   (set! skk-set-henkan-point-key ja-act-skk-set-henkan-point-key)
-		  ja-act-rule)
+		  ja-act-rule-utf8)
 		 ((= input-rule skk-input-rule-kzik)
-		  (require "japanese-kzik.scm")
+		  (require "japanese-kzik-utf8.scm")
                   (set! skk-okuri-char-alist '())
                   (set! skk-downcase-alist '())
                   (set! skk-set-henkan-point-key '())
-		  ja-kzik-rule))))
+		  ja-kzik-rule-utf8))))
       (skk-context-set-input-rule! sc input-rule)
       (rk-context-set-rule! rkc rule))))
 
@@ -503,7 +503,7 @@
   (lambda (sl)
     (let ((get-wide-latin-str
 	   (lambda (l)
-	     (ja-wide (caar l)))))
+	     (ja-wide-utf8 (caar l)))))
     (if (not (null? sl))
 	(string-append (skk-conv-wide-latin (cdr sl))
 		       (get-wide-latin-str sl))
@@ -1311,7 +1311,7 @@
 	  (begin
 	    (skk-string-list-to-context-head
 	     sc
-	     (string-to-list (skk-context-dcomp-word sc)))
+	     (string-to-list-utf8 (skk-context-dcomp-word sc)))
 	    (skk-context-set-nth! sc 0)
 	    (skk-commit sc (skk-prepare-commit-string sc)))
 	  (begin
@@ -1333,7 +1333,7 @@
 		(begin
 		  (skk-string-list-to-context-head
 		   sc
-		   (string-to-list dcomp))
+		   (string-to-list-utf8 dcomp))
 		  (if (skk-lib-get-entry
                        skk-dic
                        (skk-make-string
@@ -1459,14 +1459,14 @@
 	      ((and skk-dcomp-activate?
 		    (not (skk-rk-pending? sc))
 		    (not (string=? (skk-context-dcomp-word sc) "")))
-	       (let ((sl (string-to-list (skk-context-dcomp-word sc))))
+	       (let ((sl (string-to-list-utf8 (skk-context-dcomp-word sc))))
 		 (skk-string-list-to-context-head sc sl)
 		 (skk-begin-conversion sc)))
 	      ((and skk-dcomp-activate?
 		    (skk-rk-pending? sc)
 		    (not (string=? (skk-context-dcomp-word sc) "")))
 	       (skk-append-residual-kana sc)
-	       (let ((sl (string-to-list
+	       (let ((sl (string-to-list-utf8
 			  (skk-lib-get-dcomp-word
                            skk-dic
                            (skk-make-string
@@ -1910,7 +1910,7 @@
 		    skk-use-numeric-conversion?
 		    (string=? "#" (car sl))))
 	       (list (car sl) (car sl) (car sl))
-	       (find-kana-list-from-rule ja-rk-rule-basic (car sl))))
+	       (ja-find-kana-list-from-rule-utf8 ja-rk-rule-basic-utf8 (car sl))))
 	  (skk-append-string-list-to-context-head sc (cdr sl)))
 	#f))))
 
@@ -1926,7 +1926,7 @@
 	   #t)
        (if (skk-new-completion-from-current-comp-key? key key-state)
 	   (let* ((comp (skk-get-current-completion sc))
-		  (sl (string-to-list comp)))
+		  (sl (string-to-list-utf8 comp)))
 	     (if (not (null? sl))
 		 (begin (skk-lib-get-completion
                          skk-dic
@@ -1957,7 +1957,7 @@
 	     ;;(skk-reset-dcomp-word sc)
 	     #f)
 	   #t)
-       (let ((sl (string-to-list (skk-get-current-completion sc))))
+       (let ((sl (string-to-list-utf8 (skk-get-current-completion sc))))
 	 (skk-lib-clear-completions
 	  (skk-make-string (skk-context-head sc) (skk-context-kana-mode sc))
 	  skk-use-numeric-conversion?)
@@ -2133,7 +2133,7 @@
 (define skk-proc-state-wide-latin
   (lambda (c key key-state)
     (let* ((char (charcode->string key))
-	   (w (if (symbol? key) #f (ja-wide char)))
+	   (w (if (symbol? key) #f (ja-wide-utf8 char)))
 	   (sc (skk-find-descendant-context c)))
       (if skk-use-with-vi?
 	  (if (skk-vi-escape-key? key key-state)
@@ -2173,11 +2173,11 @@
 	    (skk-return-key? key key-state))
 	   (begin
 	     (if (> (length (skk-context-head sc)) 0)
-	       (let* ((str-list (string-to-list
+	       (let* ((str-list (string-to-list-utf8
 				  (skk-make-string
 				     (skk-context-head sc)
 				     (skk-context-kana-mode sc))))
-		      (kanji (ja-kanji-code-input str-list)))
+		      (kanji (ja-kanji-code-input-utf8 str-list)))
 		 (if (and kanji (> (string-length kanji) 0))
 		   (begin
 		     (skk-commit sc kanji)
@@ -2327,7 +2327,7 @@
 (register-im
  'skk
  "ja"
- "EUC-JP"
+ "UTF-8"
  skk-im-name-label
  skk-im-short-desc
  #f

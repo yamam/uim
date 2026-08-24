@@ -30,7 +30,7 @@
 
 ;; ja-kana-hiragana rule and ja-kana-katakana-rule should be merged.
 
-(define ja-kana-hiragana-rule
+(define ja-kana-hiragana-rule-utf8
   '(
     ((("#"). ("ぁ"))())
     ((("E"). ("ぃ"))())
@@ -332,7 +332,7 @@
 
     ))
 
-(define ja-kana-katakana-rule
+(define ja-kana-katakana-rule-utf8
   '(
     ((("#"). ("ァ"))())
     ((("E"). ("ィ"))())
@@ -633,7 +633,7 @@
     ((("」"). ())("」"))
     ))
 
-(define ja-kana-halfkana-rule
+(define ja-kana-halfkana-rule-utf8
   '(
     ((("#"). ("ｧ"))())
     ((("E"). ("ｨ"))())
