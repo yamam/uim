@@ -1402,12 +1402,13 @@ static void recover_loop(void)
   char buf[BUFSIZE];
   ssize_t len;
   fd_set fds;
+  int nfd = (g_win_in > s_master ? g_win_in : s_master) + 1;
 
   while (TRUE) {
     FD_ZERO(&fds);
     FD_SET(g_win_in, &fds);
     FD_SET(s_master, &fds);
-    if (select(s_master + 1, &fds, NULL, NULL, NULL) <= 0) {
+    if (select(nfd, &fds, NULL, NULL, NULL) <= 0) {
       /* signalで割り込まれたときにくる。selectの返り値は-1でerrno==EINTR */
       continue;
     }
