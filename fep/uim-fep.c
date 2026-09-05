@@ -1655,13 +1655,9 @@ static void sigwinch_handler(void)
 
 void done(int exit_value)
 {
-  int fatal = fatal_error_occurred();
-
   flush_pending_pty_sequence();
-  if (!fatal) {
-    uim_quit();
-    quit_helper();
-  }
+  uim_quit();
+  quit_helper();
   quit_escseq();
   if (g_opt.status_type == BACKTICK) {
     clear_backtick();
