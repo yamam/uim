@@ -190,7 +190,6 @@ static void set_signal_handler(void);
 static void reset_signal_handler(void);
 static void signal_handler(int sig_no);
 static void recover(void);
-static void reset_getmode(void);
 static void recover_if_fatal(void);
 static void sigtstp_handler(void);
 static void sigwinch_handler(void);
@@ -1562,27 +1561,12 @@ static int child_exited(void)
 
 static void recover(void)
 {
-  reset_getmode();
+  write_getmode(0);
   recover_display();
   reset_signal_handler();
   quit_escseq();
   recover_loop();
   done(EXIT_SUCCESS);
-}
-
-static void reset_getmode(void)
-{
-  FILE *fp;
-
-  if (s_path_getmode[0] == '\0') {
-    return;
-  }
-
-  fp = fopen(s_path_getmode, "wt");
-  if (fp != NULL) {
-    fprintf(fp, "0\n");
-    fclose(fp);
-  }
 }
 
 static void recover_if_fatal(void)

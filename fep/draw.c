@@ -148,6 +148,21 @@ void init_draw(int master, const char *path_getmode)
   }
 }
 
+void write_getmode(int mode)
+{
+  FILE *fp;
+
+  if (s_path_getmode == NULL || s_path_getmode[0] == '\0') {
+    return;
+  }
+
+  fp = fopen(s_path_getmode, "wt");
+  if (fp != NULL) {
+    fprintf(fp, "%d\n", mode);
+    fclose(fp);
+  }
+}
+
 static void init_backtick(void)
 {
   if (getenv("WINDOW")) {
@@ -524,14 +539,7 @@ end_candidate:
   if (force || strcmp(mode_str, prev_mode_str) != 0) {
 
     /* 現在のモードをUIM_FEP_GETMODEに書き込む */
-    if (s_path_getmode[0] != '\0') {
-      FILE *fp = fopen(s_path_getmode, "wt");
-      if (fp) {
-        int mode = get_mode();
-        fprintf(fp, "%d\n", mode);
-        fclose(fp);
-      }
-    }
+    write_getmode(get_mode());
 
     if (g_opt.status_type != NONE && statusline_str[0] == '\0') {
       if (g_opt.status_type == LASTLINE) {

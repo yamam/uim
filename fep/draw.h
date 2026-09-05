@@ -47,6 +47,7 @@ extern int g_start_preedit;
 extern int g_commit;
 
 void init_draw(int master, const char *path_getmode);
+void write_getmode(int mode);
 void update_backtick(void);
 int draw(void);
 void draw_statusline_restore(void);
