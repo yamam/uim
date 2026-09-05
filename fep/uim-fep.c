@@ -190,7 +190,6 @@ static void set_signal_handler(void);
 static void reset_signal_handler(void);
 static void signal_handler(int sig_no);
 static void recover(void);
-static int fatal_error_occurred(void);
 static void reset_getmode(void);
 static void recover_if_fatal(void);
 static void sigtstp_handler(void);
@@ -1571,15 +1570,6 @@ static void recover(void)
   done(EXIT_SUCCESS);
 }
 
-static int fatal_error_occurred(void)
-{
-#if UIM_USE_ERROR_GUARD
-  return uim_caught_fatal_error();
-#else
-  return FALSE;
-#endif
-}
-
 static void reset_getmode(void)
 {
   FILE *fp;
@@ -1597,9 +1587,11 @@ static void reset_getmode(void)
 
 static void recover_if_fatal(void)
 {
-  if (fatal_error_occurred()) {
+#if UIM_USE_ERROR_GUARD
+  if (uim_caught_fatal_error()) {
     recover();
   }
+#endif
 }
 
 /*
