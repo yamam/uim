@@ -207,7 +207,7 @@ static void merge_purged_cands(dic_info *skk_dic,
 static void merge_purged_cand_to_dst_array(dic_info *skk_dic,
 		struct skk_cand_array *src_ca,
 		struct skk_cand_array *dst_ca, char *purged_cand);
-static void update_personal_dictionary_cache_with_file(dic_info *skk_dic,
+static int update_personal_dictionary_cache_with_file(dic_info *skk_dic,
 		const char *fn, int is_personal);
 static int convert_dictionary_buffer(enum skk_dictionary_encoding to_encoding,
                                      enum skk_dictionary_encoding from_encoding,
@@ -3509,22 +3509,19 @@ static uim_lisp
 skk_read_personal_dictionary(uim_lisp skk_dic_, uim_lisp fn_)
 {
   const char *fn;
-  struct stat st;
-  uim_lisp ret;
+  int ret;
   dic_info *skk_dic = NULL;
 
   if (PTRP(skk_dic_))
     skk_dic = C_PTR(skk_dic_);
 
   fn = REFER_C_STR(fn_);
-  ret = (stat(fn, &st) != -1) ? uim_scm_t() : uim_scm_f();
-
-  update_personal_dictionary_cache_with_file(skk_dic, fn, 1);
+  ret = update_personal_dictionary_cache_with_file(skk_dic, fn, 1);
 #if USE_SKK_JISYO_S_BUF
   update_personal_dictionary_cache_with_file(skk_dic, SKK_JISYO_S, 0);
 #endif
 
-  return ret;
+  return ret ? uim_scm_t() : uim_scm_f();
 }
 
 static void push_back_candidate_array_to_sl(struct skk_line *sl,
@@ -3675,7 +3672,7 @@ lsort(struct skk_line *p)
   return p;
 }
 
-static void
+static int
 update_personal_dictionary_cache_with_file(dic_info *skk_dic, const char *fn,
 		                           int is_personal)
 {
@@ -3689,7 +3686,7 @@ update_personal_dictionary_cache_with_file(dic_info *skk_dic, const char *fn,
 
   if (!read_dictionary_file(di, fn, is_personal)) {
     free(di);
-    return;
+    return 0;
   }
 
   /* If no cache is available, just use new one. */
@@ -3699,7 +3696,7 @@ update_personal_dictionary_cache_with_file(dic_info *skk_dic, const char *fn,
     skk_dic->cache_modified = di->cache_modified;
     skk_dic->personal_dic_timestamp = di->personal_dic_timestamp;
     free(di);
-    return;
+    return 1;
   }
 
   /* keep original sequence of cache */
@@ -3759,6 +3756,7 @@ update_personal_dictionary_cache_with_file(dic_info *skk_dic, const char *fn,
   }
   free(di);
   free(cache_array);
+  return 1;
 }
 
 static uim_lisp
@@ -3783,8 +3781,9 @@ skk_save_personal_dictionary(uim_lisp skk_dic_, uim_lisp fn_)
   if (fn) {
     get_personal_dictionary_encoding(fn, &encoding);
     if (stat(fn, &st) != -1) {
-      if (st.st_mtime != skk_dic->personal_dic_timestamp)
-	update_personal_dictionary_cache_with_file(skk_dic, fn, 1);
+      if (st.st_mtime != skk_dic->personal_dic_timestamp &&
+          !update_personal_dictionary_cache_with_file(skk_dic, fn, 1))
+        return uim_scm_f();
     }
 
     lock_fd = open_lock(fn, F_WRLCK);
