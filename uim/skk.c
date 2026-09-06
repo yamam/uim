@@ -3762,12 +3762,13 @@ update_personal_dictionary_cache_with_file(dic_info *skk_dic, const char *fn,
 static uim_lisp
 skk_save_personal_dictionary(uim_lisp skk_dic_, uim_lisp fn_)
 {
-  FILE *fp;
+  FILE *fp = NULL;
   const char *fn = REFER_C_STR(fn_);
   char tmp_fn[MAXPATHLEN];
   struct skk_line *sl;
   struct stat st;
   int lock_fd = -1;
+  int tmp_created = 0;
   mode_t umask_val;
   dic_info *skk_dic = NULL;
   enum skk_dictionary_encoding encoding = SKK_DICTIONARY_ENCODING_UTF8;
@@ -3794,6 +3795,7 @@ skk_save_personal_dictionary(uim_lisp skk_dic_, uim_lisp fn_)
     umask(umask_val);
     if (!fp)
       goto error;
+    tmp_created = 1;
 
   } else {
     fp = stdout;
@@ -3813,11 +3815,15 @@ skk_save_personal_dictionary(uim_lisp skk_dic_, uim_lisp fn_)
   if (fsync(fileno(fp)) != 0)
     goto error;
 
-  if (fclose(fp) != 0)
+  if (fclose(fp) != 0) {
+    fp = NULL;
     goto error;
+  }
+  fp = NULL;
 
   if (rename(tmp_fn, fn) != 0)
     goto error;
+  tmp_created = 0;
 
   if (stat(fn, &st) != -1) {
     skk_dic->personal_dic_timestamp = st.st_mtime;
@@ -3825,6 +3831,10 @@ skk_save_personal_dictionary(uim_lisp skk_dic_, uim_lisp fn_)
   }
 
 error:
+  if (fp && fp != stdout)
+    fclose(fp);
+  if (tmp_created)
+    unlink(tmp_fn);
   close_lock(lock_fd);
   return uim_scm_f();
 }
