@@ -47,11 +47,13 @@ extern int g_start_preedit;
 extern int g_commit;
 
 void init_draw(int master, const char *path_getmode);
+void write_getmode(int mode);
 void update_backtick(void);
 int draw(void);
 void draw_statusline_restore(void);
 void draw_statusline_force_no_restore(void);
 void draw_statusline_force_restore(void);
+void recover_display(void);
 void clear_lastline(void);
 void clear_backtick(void);
 int is_commit_and_preedit(void);

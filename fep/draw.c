@@ -108,6 +108,7 @@ static int compare_preedit_rev(struct preedit_tag *p1, struct preedit_tag *p2);
 static int min(int a, int b);
 static void erase_prev_preedit(void);
 static void erase_preedit(void);
+static void erase_displayed_preedit(const struct preedit_tag *preedit);
 static void set_line2width(struct preedit_tag *preedit);
 static void goto_char(int width);
 static void goto_col(int width);
@@ -144,6 +145,21 @@ void init_draw(int master, const char *path_getmode)
   s_preedit = create_preedit();
   if (g_opt.status_type == BACKTICK) {
     init_backtick();
+  }
+}
+
+void write_getmode(int mode)
+{
+  FILE *fp;
+
+  if (s_path_getmode == NULL || s_path_getmode[0] == '\0') {
+    return;
+  }
+
+  fp = fopen(s_path_getmode, "wt");
+  if (fp != NULL) {
+    fprintf(fp, "%d\n", mode);
+    fclose(fp);
   }
 }
 
@@ -219,17 +235,7 @@ int draw(void)
     /* プリエディットを消す必要があるか */
     if (prev_preedit->width > 0) {
       put_cursor_invisible();
-      if (g_opt.no_report_cursor) {
-        put_cursor_left(prev_preedit->cursor);
-        if (g_opt.on_the_spot) {
-          put_delete(prev_preedit->width);
-        } else {
-          put_erase(prev_preedit->width);
-          put_cursor_left(prev_preedit->width);
-        }
-      } else {
-        erase_preedit();
-      }
+      erase_displayed_preedit(prev_preedit);
       end_preedit();
     }
     write(s_master, commit_str, strlen(commit_str));
@@ -533,14 +539,7 @@ end_candidate:
   if (force || strcmp(mode_str, prev_mode_str) != 0) {
 
     /* 現在のモードをUIM_FEP_GETMODEに書き込む */
-    if (s_path_getmode[0] != '\0') {
-      FILE *fp = fopen(s_path_getmode, "wt");
-      if (fp) {
-        int mode = get_mode();
-        fprintf(fp, "%d\n", mode);
-        fclose(fp);
-      }
-    }
+    write_getmode(get_mode());
 
     if (g_opt.status_type != NONE && statusline_str[0] == '\0') {
       if (g_opt.status_type == LASTLINE) {
@@ -647,6 +646,24 @@ void draw_statusline_force_restore(void)
 {
   end_callbacks();
   draw_statusline(TRUE, TRUE, TRUE, TRUE);
+}
+
+/*
+ * Erase the display state owned by uim-fep before switching to transparent
+ * recovery mode.
+ */
+void recover_display(void)
+{
+  if (g_start_preedit) {
+    put_cursor_invisible();
+    erase_displayed_preedit(s_preedit);
+    end_preedit();
+    put_cursor_normal();
+  }
+
+  if (g_opt.status_type == BACKTICK) {
+    clear_backtick();
+  }
 }
 
 /*
@@ -1005,6 +1022,21 @@ static void erase_preedit(void)
   s_line2width = uim_malloc(sizeof(int));
   s_line2width[0] = s_head.col;
   erase_prev_preedit();
+}
+
+static void erase_displayed_preedit(const struct preedit_tag *preedit)
+{
+  if (g_opt.no_report_cursor) {
+    put_cursor_left(preedit->cursor);
+    if (g_opt.on_the_spot) {
+      put_delete(preedit->width);
+    } else {
+      put_erase(preedit->width);
+      put_cursor_left(preedit->width);
+    }
+  } else {
+    erase_preedit();
+  }
 }
 
 static void set_line2width(struct preedit_tag *preedit)
