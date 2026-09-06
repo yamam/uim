@@ -96,8 +96,10 @@ struct skk_converter_cache {
 };
 
 static struct skk_converter_cache skk_converter_cache[] = {
+  { SKK_DICTIONARY_ENCODING_UTF8, SKK_DICTIONARY_ENCODING_UTF8, NULL, 0 },
   { SKK_DICTIONARY_ENCODING_UTF8, SKK_DICTIONARY_ENCODING_EUC_JP, NULL, 0 },
-  { SKK_DICTIONARY_ENCODING_EUC_JP, SKK_DICTIONARY_ENCODING_UTF8, NULL, 0 }
+  { SKK_DICTIONARY_ENCODING_EUC_JP, SKK_DICTIONARY_ENCODING_UTF8, NULL, 0 },
+  { SKK_DICTIONARY_ENCODING_EUC_JP, SKK_DICTIONARY_ENCODING_EUC_JP, NULL, 0 }
 };
 
 /*
@@ -271,23 +273,19 @@ convert_dictionary_buffer(enum skk_dictionary_encoding to_encoding,
   *outbuf = NULL;
   *outlen = 0;
 
-  if (to_encoding == from_encoding) {
-    converted = uim_strdup(inbuf);
-  } else {
-    cache = get_skk_converter(to_encoding, from_encoding);
-    if (!cache)
-      return 0;
+  cache = get_skk_converter(to_encoding, from_encoding);
+  if (!cache)
+    return 0;
 
-    if (!cache->initialized) {
-      cache->converter = uim_iconv->create(skk_encoding_name(to_encoding),
-                                           skk_encoding_name(from_encoding));
-      cache->initialized = 1;
-    }
-    if (!cache->converter)
-      return 0;
-
-    converted = uim_iconv->convert(cache->converter, inbuf);
+  if (!cache->initialized) {
+    cache->converter = uim_iconv->create(skk_encoding_name(to_encoding),
+                                         skk_encoding_name(from_encoding));
+    cache->initialized = 1;
   }
+  if (!cache->converter)
+    return 0;
+
+  converted = uim_iconv->convert(cache->converter, inbuf);
 
   if (!converted || (inbuf[0] != '\0' && converted[0] == '\0')) {
     free(converted);
