@@ -1227,7 +1227,7 @@
       (when helpermsg
 	(uim-helper-send-message helpermsg))
 
-      (when (and default (not (uim-get-default-engine)))
+      (when (and default (not uim-default-im-engine))
 	(uim-update-default-engine default))
 
       (when im
